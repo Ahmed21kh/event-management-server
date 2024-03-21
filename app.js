@@ -112,6 +112,7 @@ server.listen(port, () => {
           clientId: "client",
         }),
       });
+      const timer = (ms) => new Promise((res) => setTimeout(res, ms));
 
       client.on("qr", async (qr) => {
         // logger.info(qr);
@@ -158,7 +159,69 @@ server.listen(port, () => {
           .then(() => logger.info("initialized"))
           .catch((err) => logger.error(err));
       });
+      const sendMediaToAll = async (data) => {
+        logger.info(JSON.stringify(data));
+        let messageProgress = 0;
+        logger.info("whatsappList =====>",data.whatsappList);
+        logger.info(data.message);
+        for (let index = 0; index < data.whatsappList.length; index++) {
+          logger.info(`one record =======>> ${JSON.stringify(element)}`);
+          const element = data.whatsappList[index];
+          const chatId = element?.key + "@c.us";
+          const message = element?.value;
+          console.log("chatId ======>",chatId);
+          console.log("message ======>",message);
+          logger.info({ message: message, chatId: chatId });
+            const media = MessageMedia.fromFilePath(
+                  `./uploads/${element?.key}.png`
+                );
+            await client
+            .sendMessage(chatId, media , {
+              caption:message,
+            })
+            .then(async (msg) => {
+              // logger.info(msg);
+              if (messageProgress <= 100) {
+                messageProgress++;
+                socket.emit("messageProgress", {
+                  progress: Math.ceil((messageProgress / data.whatsappList.length) * 100),
+                });
+              }
+              if (msg.hasMedia) {
+                await msg.downloadMedia();
+                // do something with the media data here
+              }
+            })
+            .catch((err) => {
+              logger.info(err);
+              logger.error(err.message);
+            })
+            .finally(() => {
+              const path1 = path.join(
+                __dirname,
+                `./uploads/${element?.key}.png`
+              );
+              fs.unlinkSync(path1, (err) => {
+                if (err) {
+                   logger
+                   .error(err);
+                } else {
+                   logger
+                   .log("Delete File successfully.");
+                }
+               });
+            });
+          await timer(1300);
+            
+          }
     
+        // }
+      };
+      socket.on("sendMediaToAll", (data) => {
+        sendMediaToAll(data).then(() => {
+          socket.emit("success", "messages sent successfully ");
+        });
+      });
       client.on("disconnected", (reason) => {
         logger.info(`Client disconnected due to ${reason}. Reconnecting...`);
         client
@@ -170,6 +233,60 @@ server.listen(port, () => {
             logger.info(err);
           });
       });
+      socket.on("disconnect", async () => {
+        logger.info("socket disconnected");
+        logger.info("socket disconnected");
+        try {
+          await client
+            .getState()
+            .then(async (state) => {
+              logger.info(state);
+              logger.info(state);
+              if (state === "CONNECTED" || state === "PAIRING") {
+                await client
+                  .destroy()
+                  .then((res) => {
+                    logger.info("client destroyed");
+                    logger.info("client destroyed");
+                  })
+                  .catch((err) => {
+                    logger.info("error");
+    
+                    logger.error(err);
+                  });
+              } else {
+                //  startClient()
+                await client
+                  .destroy()
+                  .then((res) => {
+                    logger.info("client destroyed");
+    
+                    logger.info("client destroyed");
+                  })
+                  .catch((err) => {
+                    logger.info("error");
+                    logger.error(err);
+                  });
+              }
+            })
+            .catch((err) => {
+              logger.info(err);
+              logger.error(err);
+            });
+        } catch (err) {
+          logger.info(err);
+          logger.error(err);
+        }
+      });
+    
+      client
+        .initialize()
+        .then((res) => {
+          // logger.info("res", res);
+          logger.info("client initialized");
+          // logger.info(" initialized client ");
+        })
+        .catch((err) => logger.info("error :", err));
   })
 
   const liveReloadServer = livereload.createServer()

@@ -3,6 +3,7 @@ const path = require("path")
 const fs = require("fs")
 const objectId = require("mongodb").ObjectId;
 const QRCode = require('qrcode');
+const logger = require("../logger");
 
 //Add Customer
 const addCustomer = async (req, res) => {
@@ -15,7 +16,7 @@ const addCustomer = async (req, res) => {
         const qrData = JSON.stringify({from_date,to_date,customer_name:data.customer_name,customer_mobile:data.customer_mobile,_id:data._id,invitation:data.invitation});
 
         // The path where you want to save the QR code image
-        const filePath = path.join(__dirname,`../uploads/${data._id}.png`) ;
+        const filePath = path.join(__dirname,`../uploads/${data.customer_mobile}.png`) ;
 
         // Generate the QR code and save it as a PNG image
         QRCode.toFile(
@@ -117,12 +118,22 @@ const getCustomers = async (req, res) => {
 //Update Customer
 const updateCustomer = async (req,res) =>{
   try {
-   await Customers.findByIdAndUpdate(new objectId(req.query?.id), req.body,{ new: true, upsert: false }).then((data)=>{
-    res.status(200).json({ success: true, data });
-   }).catch((e)=>{
-    res.status(400).json({ success: false, message: e.message });
+   await Customers.findOne({_id:new objectId(req.query?.id)}).then((cust)=>{
+     logger.info("Customer: " + cust)
+     if (cust.isAttend) {
+      res.status(200).json({ success: true, message: "this customer is already attend and this QR code is already scaned" });
+     }else {
+        Customers.findByIdAndUpdate(new objectId(req.query?.id), req.body,{ new: true, upsert: false }).then((data)=>{
+        res.status(200).json({ success: true, data,message:"QR code scaned successfully and the customer is attend" });
+       }).catch((e)=>{
+        res.status(400).json({ success: false, message: e.message });
+       })
 
+     }
+   }).catch((err)=>{
+    res.status(400).json({ success: false, message: e.message });
    })
+
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
     
