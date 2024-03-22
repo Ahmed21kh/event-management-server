@@ -115,11 +115,11 @@ server.listen(port, () => {
           handleSIGINT: false,
           headless: true,
           takeoverOnConflict: true,
-          takeoverTimeoutMs: 6000,
-          pingInterval: 10000,
-          pingTimeout: 5000,
-          qrTimeout: 10000,
-          slowMo: 100,
+          // takeoverTimeoutMs: 6000,
+          // pingInterval: 10000,
+          // pingTimeout: 5000,
+          // qrTimeout: 10000,
+          // slowMo: 100,
         },
     
         authStrategy: new LocalAuth({
