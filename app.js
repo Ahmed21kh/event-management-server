@@ -111,15 +111,26 @@ server.listen(port, () => {
             "--ignore-certificate-errors", // Experimental (to fix freezing)
             "--disable-accelerated-2d-canvas", // Experimental (to fix freezing)
             "--disable-gpu", // Experimental (to fix freezing)
+            '--log-level=3', // fatal only
+            '--start-maximized',
+            '--no-default-browser-check',
+            '--disable-infobars', 
+            '--disable-site-isolation-trials',
+            '--no-experiments',
+            '--ignore-gpu-blacklist',
+            '--ignore-certificate-errors-spki-list',
+            '--disable-extensions',
+            '--disable-default-apps',
+            '--enable-features=NetworkService',
           ],
           handleSIGINT: false,
           headless: true,
           takeoverOnConflict: true,
-          // takeoverTimeoutMs: 6000,
-          // pingInterval: 10000,
-          // pingTimeout: 5000,
-          // qrTimeout: 10000,
-          // slowMo: 100,
+          takeoverTimeoutMs: 6000,
+          pingInterval: 10000,
+          pingTimeout: 5000,
+          qrTimeout: 10000,
+          slowMo: 100,
         },
     
         authStrategy: new LocalAuth({
