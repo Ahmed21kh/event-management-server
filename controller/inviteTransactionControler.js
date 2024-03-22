@@ -30,8 +30,9 @@ const addInviteTransaction = async (req, res) => {
          console.log( path.join(__dirname,'../'));
         // The path where you want to save the QR code image
         const filePath = path.join(__dirname,`../uploads/${customer.customer_mobile}.png`) ;
-
-       if (fs.existsSync(filePath)) {
+        const folderPath = path.join(__dirname,`../uploads`) ;
+        
+       if (fs.existsSync(folderPath)) {
          QRCode.toFile(
            filePath,
            qrData,
@@ -46,7 +47,7 @@ const addInviteTransaction = async (req, res) => {
         
        } else {
         console.log("filePath not found");
-        console.log(fs.existsSync(path.join(`/uploads/${customer.customer_mobile}.png`)));
+        console.log(fs.existsSync(path.join(`./uploads/${customer.customer_mobile}.png`)));
        }
         // Generate the QR code and save it as a PNG image
        await res
