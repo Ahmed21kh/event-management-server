@@ -15,6 +15,7 @@ const port = 5050;
 const router = express.Router();
 const customerRoute = require("./routes/customerRoutes")
 const invitationRoute = require("./routes/invitationRoutes")
+const inviteTransactionRoute = require("./routes/inviteTransactionRoutes")
 const {
     Client,
     LegacySessionAuth,
@@ -23,6 +24,8 @@ const {
     MessageMedia,
   } = require("whatsapp-web.js");
 const logger = require('./logger')
+const { InviteTransactions } = require('./models/inviteTransactionModel')
+const objectId = require("mongodb").ObjectId;
 
 app.set("view engine", "ejs")
 app.set("views", "views")
@@ -30,6 +33,7 @@ app.use(bodyparser.json())
 app.use(cors())
 app.use("/api",customerRoute);
 app.use("/api",invitationRoute);
+app.use("/api",inviteTransactionRoute);
 app.use('/uploads', express.static('uploads'));
 app.use( (req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
@@ -163,21 +167,19 @@ server.listen(port, () => {
         logger.info(JSON.stringify(data));
         let messageProgress = 0;
         logger.info("whatsappList =====>",data.whatsappList);
-        logger.info(data.message);
         for (let index = 0; index < data.whatsappList.length; index++) {
-          logger.info(`one record =======>> ${JSON.stringify(element)}`);
           const element = data.whatsappList[index];
           const chatId = element?.key + "@c.us";
           const message = element?.value;
           console.log("chatId ======>",chatId);
           console.log("message ======>",message);
           logger.info({ message: message, chatId: chatId });
-            const media = MessageMedia.fromFilePath(
-                  `./uploads/${element?.key}.png`
-                );
+          const pathOfImage = `./uploads/${element?.key}.png`
+          if (fs.existsSync(pathOfImage)) {
+            const media = MessageMedia.fromFilePath(pathOfImage);
             await client
-            .sendMessage(chatId, media , {
-              caption:message,
+            .sendMessage(chatId,media ,{
+              caption: message
             })
             .then(async (msg) => {
               // logger.info(msg);
@@ -196,12 +198,18 @@ server.listen(port, () => {
               logger.info(err);
               logger.error(err.message);
             })
-            .finally(() => {
+            .finally( async() => {
+             await InviteTransactions.findByIdAndUpdate(new objectId(element?.id),{sending_status:"sent"},{ new: true, upsert: false }).then((response) => {
+                socket.emit("updatedData",response)
+              }).catch((error) => {
+               socket.emit("error",error.message)
+              });
+           });
               const path1 = path.join(
                 __dirname,
                 `./uploads/${element?.key}.png`
               );
-              fs.unlinkSync(path1, (err) => {
+             fs.unlinkSync(path1, (err) => {
                 if (err) {
                    logger
                    .error(err);
@@ -210,16 +218,24 @@ server.listen(port, () => {
                    .log("Delete File successfully.");
                 }
                });
-            });
-          await timer(1300);
-            
+           await timer(1300);
+            // return true;
+          } 
+          // else {
+          //   socket.emit("error",`this invitation is already sent to ${element?.key}`)
+          //   return false;
+          // }
           }
     
         // }
       };
       socket.on("sendMediaToAll", (data) => {
-        sendMediaToAll(data).then(() => {
+        sendMediaToAll(data).then((res) => {
+          console.log(res);
           socket.emit("success", "messages sent successfully ");
+          // if (res) {
+            
+          // }
         });
       });
       client.on("disconnected", (reason) => {
