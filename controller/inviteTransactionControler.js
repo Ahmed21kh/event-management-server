@@ -143,6 +143,15 @@ const getInviteTransactions = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// Function to check if an invitation has expired
+function isInvitationExpired(invitation) {
+  const currentDate = new Date();
+  const expirationDate = new Date(invitation);
+  logger.info(`currentDate > expirationDate =>>>  ${currentDate > expirationDate}`)
+  // Check if the current date is after the expiration date
+  return currentDate > expirationDate;
+ }
 // update inviteTransaction
 const updateInviteTransaction = async (req, res) => {
   try {
@@ -155,9 +164,18 @@ const updateInviteTransaction = async (req, res) => {
             .json({
               success: true,
               message:
-                "this customer is already attend and this QR code is already scaned",
+                " this QR code is already scaned",
             });
-        } else {
+        } else if (isInvitationExpired(req.query.to_date)){
+          res
+          .status(200)
+          .json({
+            success: true,
+            message:
+              " this  QR code has expired",
+          });
+        }
+         else {
           InviteTransactions.findByIdAndUpdate(
             new objectId(req.query?.id),
             req.body,

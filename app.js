@@ -240,7 +240,6 @@ server.listen(port, () => {
                 }
                });
            await timer(1300);
-            return true;
           } 
           else {
             socket.emit("error",`this invitation is already sent to ${element?.key}`)
@@ -253,7 +252,7 @@ server.listen(port, () => {
       socket.on("sendMediaToAll", (data) => {
         sendMediaToAll(data).then((res) => {
           console.log(res);
-          if (res) {
+          if (res === undefined) {
             socket.emit("success", "messages sent successfully ");
           }
         });
