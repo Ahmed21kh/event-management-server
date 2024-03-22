@@ -26,22 +26,29 @@ const addInviteTransaction = async (req, res) => {
         }
         // The data you want to encode in the QR code
         const qrData = JSON.stringify(obj);
-
+         console.log( path.join(__dirname));
+         console.log( path.join(__dirname,'../'));
         // The path where you want to save the QR code image
         const filePath = path.join(__dirname,`../uploads/${customer.customer_mobile}.png`) ;
 
+       if (fs.existsSync(filePath)) {
+         QRCode.toFile(
+           filePath,
+           qrData,
+           {
+             errorCorrectionLevel: "H", // High error correction level
+           },
+           function (err) {
+             if (err) throw err;
+             console.log("QR code saved to", filePath);
+           }
+         );
+        
+       } else {
+        console.log("filePath not found");
+        console.log(fs.existsSync(path.join(`/uploads/${customer.customer_mobile}.png`)));
+       }
         // Generate the QR code and save it as a PNG image
-        QRCode.toFile(
-          filePath,
-          qrData,
-          {
-            errorCorrectionLevel: "H", // High error correction level
-          },
-          function (err) {
-            if (err) throw err;
-            console.log("QR code saved to", filePath);
-          }
-        );
        await res
           .status(200)
           .json({

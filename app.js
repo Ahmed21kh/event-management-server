@@ -79,6 +79,8 @@ server.listen(port, () => {
     })
   })
 
+  module.exports = {socketIo}
+
   socketIo.on("connection", async (socket) => {
 
     const client = new Client({
