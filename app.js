@@ -174,7 +174,7 @@ server.listen(port, () => {
           console.log("chatId ======>",chatId);
           console.log("message ======>",message);
           logger.info({ message: message, chatId: chatId });
-          const pathOfImage = `./uploads/${element?.key}.png`
+          const pathOfImage = path.join(__dirname,`./uploads/${element?.key}.png`) 
           if (fs.existsSync(pathOfImage)) {
             const media = MessageMedia.fromFilePath(pathOfImage);
             await client
@@ -219,12 +219,12 @@ server.listen(port, () => {
                 }
                });
            await timer(1300);
-            // return true;
+            return true;
           } 
-          // else {
-          //   socket.emit("error",`this invitation is already sent to ${element?.key}`)
-          //   return false;
-          // }
+          else {
+            socket.emit("error",`this invitation is already sent to ${element?.key}`)
+            return false;
+          }
           }
     
         // }
@@ -232,10 +232,9 @@ server.listen(port, () => {
       socket.on("sendMediaToAll", (data) => {
         sendMediaToAll(data).then((res) => {
           console.log(res);
-          socket.emit("success", "messages sent successfully ");
-          // if (res) {
-            
-          // }
+          if (res) {
+            socket.emit("success", "messages sent successfully ");
+          }
         });
       });
       client.on("disconnected", (reason) => {
