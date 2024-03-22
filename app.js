@@ -35,6 +35,14 @@ app.use("/api",customerRoute);
 app.use("/api",invitationRoute);
 app.use("/api",inviteTransactionRoute);
 app.use('/uploads', express.static('uploads'));
+const folderPath1 = path.join(__dirname, "uploads"); // Path to the folder
+
+if (fs.existsSync(folderPath1)) {
+  logger.info("Folder exists.");
+} else {
+  logger.info("Folder does not exist.");
+  fs.mkdirSync(folderPath1, { recursive: true });
+}
 app.use( (req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Credentials", "true");
