@@ -195,7 +195,7 @@ server.listen(port, () => {
       const sendMediaToAll = async (data) => {
         logger.info(JSON.stringify(data));
         let messageProgress = 0;
-        logger.info("whatsappList =====>",data.whatsappList);
+        logger.info("whatsappList =====>",JSON.stringify(data.whatsappList));
         for (let index = 0; index < data.whatsappList.length; index++) {
           const element = data.whatsappList[index];
           const chatId = element?.key + "@c.us";
@@ -203,7 +203,7 @@ server.listen(port, () => {
           console.log("chatId ======>",chatId);
           console.log("message ======>",message);
           logger.info({ message: message, chatId: chatId });
-          const pathOfImage = path.join(__dirname,`./uploads/${element?.key}.png`) 
+          const pathOfImage = path.join(__dirname,`./uploads/${element?.id}.png`) 
           if (fs.existsSync(pathOfImage)) {
             const media = MessageMedia.fromFilePath(pathOfImage);
             await client
@@ -236,7 +236,7 @@ server.listen(port, () => {
            });
               const path1 = path.join(
                 __dirname,
-                `./uploads/${element?.key}.png`
+                `./uploads/${element?.id}.png`
               );
              fs.unlinkSync(path1, (err) => {
                 if (err) {
@@ -250,7 +250,7 @@ server.listen(port, () => {
            await timer(1300);
           } 
           else {
-            socket.emit("error",`this invitation is already sent to ${element?.key}`)
+            socket.emit("error",`this invitation is already sent to ${element?.id}`)
             return false;
           }
           }

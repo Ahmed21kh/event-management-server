@@ -35,7 +35,7 @@ const addInviteTransaction = async (req, res) => {
         // The path where you want to save the QR code image
         const filePath = path.join(
           __dirname,
-          `../uploads/${customer.customer_mobile}.png`
+          `../uploads/${data._id}.png`
         );
         const folderPath = path.join(__dirname, `../uploads`);
 

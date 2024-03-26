@@ -1,5 +1,13 @@
 const mongoose = require("mongoose");
-
+const options = {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false // Use 24-hour format
+ };
 const InviteTransactionSchema = new mongoose.Schema({
   invitation_id: {
     type: mongoose.Schema.Types.ObjectId,
@@ -12,7 +20,7 @@ const InviteTransactionSchema = new mongoose.Schema({
   attendance_status: { type: String, required: true },
   sending_status: { type: String, required: true },
 },{timestamps:{
-  currentTime: () =>  Date.now(), // Use Unix time
+  currentTime: () => new Date().toLocaleDateString('en-CA',options), // Use Unix time
   createdAt: 'created_at', // Custom name for createdAt
   updatedAt: 'updated_at'
 }});
