@@ -26,6 +26,11 @@ const getInvitations = async(req, res)=>{
               $match: {},
             },
             {
+              $sort: {
+                created_at:-1 // Sort by createdAt in descending order
+              }
+           },
+            {
               $facet: {
                 metaData: [
                   {
@@ -58,4 +63,19 @@ const getInvitations = async(req, res)=>{
          res.status(500).json({ success: false, message: error.message });
         }
     }
-module.exports = {addInvitation,getInvitations}
+
+//get all invitations without pagination
+
+const getAllInvitations = async(req, res)=>{
+    try {
+        await Invitations.find().then((data)=>{
+        res.status(200).send(data);
+        }).catch((e)=>{
+            res.status(400).json({success: false, message: e.message})
+        })
+        
+    } catch (error) {
+     res.status(500).json({ success: false, message: error.message });
+    }
+}
+module.exports = {addInvitation,getInvitations,getAllInvitations}

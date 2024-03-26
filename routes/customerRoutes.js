@@ -5,5 +5,6 @@ const bodyParser = require('body-parser');
 
 router.post('/add-customer', bodyParser.json({ extended: true }),customerController.addCustomer)
 router.get('/get-customers',customerController.getCustomers)
+router.get('/all-customers',customerController.getAllCustomers)
 
 module.exports = router

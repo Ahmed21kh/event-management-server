@@ -4,9 +4,12 @@ const fs = require("fs")
 const objectId = require("mongodb").ObjectId;
 const logger = require("../logger");
 
+const customMessages = {
+  "customer_name":"اسم العميل",
+  "customer_mobile":"رقم الهاتف"
+}
 //Add Customer
 const addCustomer = async (req, res) => {
-  const { from_date, to_date } = req.query;
   try {
     await Customers.create(req.body)
       .then((data) => {
@@ -23,7 +26,8 @@ const addCustomer = async (req, res) => {
       .catch((e) => {
         let errMsg;
         if (e.code == 11000) {
-          errMsg = Object.keys(e.keyValue)[0] + " already exists.";
+          console.log(Object.keys(e.keyValue)[0]);
+          errMsg = `${customMessages[Object.keys(e.keyValue)[0]]} مسجل من قبل ` ;
         } else {
           errMsg = e.message;
         }
@@ -36,13 +40,46 @@ const addCustomer = async (req, res) => {
 
 //Get Customers
 const getCustomers = async (req, res) => {
+  const { customer_name, customer_mobile } =
+  req.query;
+let arr = [];
+const matchData = () => {
+  if (customer_name) {
+    arr.push({
+      customer_name: {
+        $regex: customer_name, // Replace "your_search_term" with the actual term you're searching for
+        $options: "i" // Case-insensitive search
+      }
+    });
+  }
+  if (customer_mobile) {
+    arr.push({
+      customer_mobile: {
+        $regex: customer_mobile, // Replace "your_search_term" with the actual term you're searching for
+        $options: "i" // Case-insensitive search
+      }
+    });
+  }
+    else if (!customer_mobile && !customer_name) arr.push({ });
+  return arr;
+};
+console.log(...matchData());
   try {
     const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 5;
+    const limit = Number(req.query.limit) || 10;
     await Customers.aggregate([
-      {
-        $match: {},
-      },
+        {
+        $sort: {
+          created_at:-1 // Sort by createdAt in descending order
+        }
+     },
+     {
+      $match: {
+        $and: [
+         ...matchData()
+        ]
+      }
+   },
       {
         $facet: {
           metaData: [
@@ -68,7 +105,7 @@ const getCustomers = async (req, res) => {
       },
     ])
       .then((data) => {
-        res.status(200).send(data);
+        res.status(200).send(data[0]);
       })
       .catch((e) => {
         res.status(400).json({ success: false, message: e.message });
@@ -78,6 +115,22 @@ const getCustomers = async (req, res) => {
   }
 };
 
+//All customers withot pagination 
+
+const getAllCustomers = async (req, res) => {
+  try {
+    await Customers.find()
+    .then((data) => {
+        res.status(200).send(data);
+      })
+    .catch((e) => {
+        res.status(400).json({ success: false, message: e.message });
+      });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 
-module.exports = { addCustomer, getCustomers  };
+
+module.exports = { addCustomer, getCustomers , getAllCustomers };

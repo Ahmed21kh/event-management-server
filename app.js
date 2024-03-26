@@ -16,6 +16,7 @@ const router = express.Router();
 const customerRoute = require("./routes/customerRoutes")
 const invitationRoute = require("./routes/invitationRoutes")
 const inviteTransactionRoute = require("./routes/inviteTransactionRoutes")
+const logsRoute = require("./routes/logsRoutes")
 const {
     Client,
     LegacySessionAuth,
@@ -34,6 +35,7 @@ app.use(cors())
 app.use("/api",customerRoute);
 app.use("/api",invitationRoute);
 app.use("/api",inviteTransactionRoute);
+app.use("/api",logsRoute);
 app.use('/uploads', express.static('uploads'));
 const folderPath1 = path.join(__dirname, "uploads"); // Path to the folder
 
@@ -89,8 +91,9 @@ server.listen(port, () => {
 
   module.exports = {socketIo}
 
+  const clientsActivity = {};
   socketIo.on("connection", async (socket) => {
-
+    clientsActivity[socket.id] = { lastActivity: Date.now() };
     const client = new Client({
         restartOnAuthFail: true,
         // authTimeoutMs:60000,
@@ -141,6 +144,7 @@ server.listen(port, () => {
 
       client.on("qr", async (qr) => {
         // logger.info(qr);
+        clientsActivity[socket.id].lastActivity = Date.now();
         socket.emit("Authenticated", false);
         logger.info(socket.id);
         logger.info("qr:" + " " + qr);
@@ -149,21 +153,25 @@ server.listen(port, () => {
       });
     
       client.on("loading_screen", () => {
+        clientsActivity[socket.id].lastActivity = Date.now();
         logger.info("loading screen");
         socket.emit("loading", true);
       });
     
       client.on("authenticated", async () => {
+        clientsActivity[socket.id].lastActivity = Date.now();
         logger.info("Successfully authenticated");
       });
     
       client.on("ready", async () => {
+        clientsActivity[socket.id].lastActivity = Date.now();
         logger.info("ready");
         socket.emit("isAuth", true);
         socket.emit("loading", false);
       });
     
       socket.on("Logout", async () => {
+        clientsActivity[socket.id].lastActivity = Date.now();
         // try {
         await client
           .logout()
@@ -216,7 +224,7 @@ server.listen(port, () => {
               }
             })
             .catch((err) => {
-              logger.info(err);
+              logger.error(err);
               logger.error(err.message);
             })
             .finally( async() => {
@@ -236,7 +244,7 @@ server.listen(port, () => {
                    .error(err);
                 } else {
                    logger
-                   .log("Delete File successfully.");
+                   .info("Delete File successfully.");
                 }
                });
            await timer(1300);
@@ -250,6 +258,7 @@ server.listen(port, () => {
         // }
       };
       socket.on("sendMediaToAll", (data) => {
+        clientsActivity[socket.id].lastActivity = Date.now();
         sendMediaToAll(data).then((res) => {
           console.log(res);
           if (res === undefined) {
@@ -269,7 +278,7 @@ server.listen(port, () => {
           });
       });
       socket.on("disconnect", async () => {
-        logger.info("socket disconnected");
+        delete clientsActivity[socket.id];
         logger.info("socket disconnected");
         try {
           await client
@@ -313,15 +322,31 @@ server.listen(port, () => {
           logger.error(err);
         }
       });
+
+      // const INACTIVITY_THRESHOLD = 5 * 60 * 1000; // 5 minutes
+
+      //   setInterval(() => {
+      //   const now = Date.now();
+      //   for (const clientId in clientsActivity) {
+      //     console.log(now - clientsActivity[clientId].lastActivity > INACTIVITY_THRESHOLD);
+      //       if (now - clientsActivity[clientId].lastActivity > INACTIVITY_THRESHOLD) {
+      //         console.log(`Client ${clientId} has been inactive for more than 5 minutes.`);
+      //         // socketIo.close()
+      //         // socket.disconnect(true);
+      //         // Optionally, take action here, such as disconnecting the client or sending a notification
+      //       }
+      //   }
+      //   },1000);
     
       client
         .initialize()
         .then((res) => {
+          clientsActivity[socket.id].lastActivity = Date.now();
           // logger.info("res", res);
           logger.info("client initialized");
           // logger.info(" initialized client ");
         })
-        .catch((err) => logger.info("error :", err));
+        .catch((err) => logger.error("error :", err));
   })
 
   const liveReloadServer = livereload.createServer()

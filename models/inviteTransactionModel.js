@@ -11,7 +11,11 @@ const InviteTransactionSchema = new mongoose.Schema({
   },
   attendance_status: { type: String, required: true },
   sending_status: { type: String, required: true },
-});
+},{timestamps:{
+  currentTime: () =>  Date.now(), // Use Unix time
+  createdAt: 'created_at', // Custom name for createdAt
+  updatedAt: 'updated_at'
+}});
 
 const InviteTransactions = mongoose.model("InviteTransactions", InviteTransactionSchema);
 
