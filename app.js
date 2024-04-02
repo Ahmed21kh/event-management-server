@@ -27,7 +27,7 @@ const {
 const logger = require('./logger')
 const { InviteTransactions } = require('./models/inviteTransactionModel')
 const objectId = require("mongodb").ObjectId;
-
+require('dotenv').config();
 app.set("view engine", "ejs")
 app.set("views", "views")
 app.use(bodyparser.json())
@@ -81,7 +81,7 @@ const socketIo = require("socket.io")(server, {
   });
 server.listen(port, () => {
     console.log("listening on port " + port)
-    mongoose.connect(url).then((clientdb)=>{
+    mongoose.connect(process.env.MONGO_DB_URI).then((clientdb)=>{
       // console.log(clientdb);
       console.log("connect to database");
       // clientdb.disconnect()
