@@ -109,13 +109,14 @@ const getInviteTransactions = async (req, res) => {
     if (invite_name) {
       arr.push({
         $match: {       
-          '$expr': {
-          '$regexMatch': {
-            'input': '$inviteDetails.invite_name',
-            'regex': invite_name,
-            'options': 'i'
-          }
-        }
+          'inviteDetails._id':new objectId(invite_name)   
+          //   '$expr': {
+          //   '$regexMatch': {
+          //     'input': '$inviteDetails.invite_name',
+          //     'regex': invite_name,
+          //     'options': 'i'
+          //   }
+          // }
       },
       });
     }
